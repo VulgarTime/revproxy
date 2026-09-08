@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>revproxy 管理后台</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+<div id="login" class="login-wrap">
+  <form id="loginForm" class="login-card" autocomplete="on">
+    <div class="brand">
+      <span class="logo">RP</span>
+      <div>
+        <div class="brand-name">revproxy</div>
+        <div class="brand-sub">反向代理管理后台</div>
+      </div>
+    </div>
+    <h2>登录</h2>
+    <label>用户名<input name="user" id="user" autocomplete="username" placeholder="admin"></label>
+    <label>密码<input name="pass" id="pass" type="password" autocomplete="current-password" placeholder="••••••"></label>
+    <button class="btn primary block" type="submit">登 录</button>
+    <div id="loginErr" class="err"></div>
+    <p class="dim small">初始账号 <code>admin</code> / <code>admin123</code>，登录后请尽快修改密码。</p>
+  </form>
+</div>
+
+<div id="app" hidden>
+  <header class="topbar">
+    <div class="brand small">
+      <span class="logo">RP</span>
+      <div>
+        <div class="brand-name">revproxy</div>
+        <div class="brand-sub" id="metaLine">加载中…</div>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn ghost" id="btnReloadCfg" title="重新加载磁盘上的配置文件">重载配置</button>
+      <button class="btn ghost" id="btnRefresh">刷新</button>
+      <span class="user-chip" id="userChip">admin</span>
+      <button class="btn ghost" id="btnLogout">退出</button>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab active" data-tab="overview">概览</button>
+    <button class="tab" data-tab="routes">路由</button>
+    <button class="tab" data-tab="proxies">上游代理（添加代理）</button>
+    <button class="tab" data-tab="logs">访问日志</button>
+    <button class="tab" data-tab="settings">设置</button>
+  </nav>
+
+  <main id="view" class="view"></main>
+</div>
+
+<div id="modalRoot"></div>
+<div id="toast"></div>
+
+<script src="./app.js"></script>
+</body>
+</html>

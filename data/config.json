@@ -1,0 +1,383 @@
+{
+  "version": 1,
+  "updatedAt": "2026-09-07T15:21:08.790931009+08:00",
+  "listen": {
+    "addr": ":3000",
+    "adminAddr": "",
+    "adminPath": "/__admin",
+    "readTimeout": 0,
+    "writeTimeout": 0,
+    "idleTimeout": 120,
+    "maxHeaderKB": 64
+  },
+  "admin": {
+    "username": "admin",
+    "passHash": "7d68134b1bd04bce9c52e716f65fca40:a4e18d344c63b341aa6ab359fe2710e01ddc44e5cf561a52bb2341a050b38d1b",
+    "secret": "bf1d2f5cc513a388958fdd4c15547d4d105525a4bd1b840b579deea27124ba7f",
+    "sessionTTL": 12,
+    "enabled": true
+  },
+  "log": {
+    "level": "info",
+    "access": true,
+    "file": "",
+    "buffer": 500
+  },
+  "global": {
+    "defaultProxy": "__direct__",
+    "maxConnsPerHost": 0,
+    "maxIdleConns": 200,
+    "dialTimeout": 10,
+    "responseTimeout": 0,
+    "keepAlive": 30,
+    "hideVersion": false,
+    "trustProxy": false,
+    "enableEcho": false,
+    "rateLimit": {
+      "enabled": false,
+      "rps": 0,
+      "burst": 0,
+      "perIp": false
+    }
+  },
+  "proxies": [
+    {
+      "id": "px_demo_socks5",
+      "name": "演示 socks5（本机 1080，账号 test/pass）",
+      "type": "socks5",
+      "addr": "127.0.0.1:1080",
+      "username": "test",
+      "password": "pass",
+      "timeout": 10,
+      "note": "沙箱里跑的测试用 SOCKS5 服务器，可在后台点「测试」验证连通性"
+    },
+    {
+      "id": "px_c2ba0e9108e57e09",
+      "name": "tw",
+      "type": "socks5",
+      "addr": "61.218.31.99:24080",
+      "username": "",
+      "password": "",
+      "timeout": 10,
+      "note": ""
+    },
+    {
+      "id": "px_364ac9710239959b",
+      "name": "hnyd",
+      "type": "socks5",
+      "addr": "192.144.137.222:1515",
+      "username": "",
+      "password": "",
+      "timeout": 10,
+      "note": ""
+    }
+  ],
+  "routes": [
+    {
+      "id": "rt_demo_echo",
+      "name": "演示：内置回显上游（internal://echo）",
+      "enabled": true,
+      "host": "",
+      "path": "/demo",
+      "match": "prefix",
+      "mode": "",
+      "scheme": "",
+      "priority": 10,
+      "rewrite": "/",
+      "stripPath": false,
+      "backends": [
+        {
+          "url": "internal://echo",
+          "weight": 1,
+          "proxyId": "__direct__",
+          "backup": false
+        }
+      ],
+      "lb": "round_robin",
+      "proxyId": "__direct__",
+      "insecureTLS": false,
+      "preserveHost": false,
+      "retry": 1,
+      "timeout": 0,
+      "headers": {
+        "request": [
+          {
+            "name": "X-Demo",
+            "value": "revproxy"
+          }
+        ]
+      },
+      "health": {
+        "enabled": true,
+        "path": "/",
+        "interval": 30,
+        "timeout": 3,
+        "fails": 3,
+        "passes": 1,
+        "codes": []
+      },
+      "access": {
+        "basicAuth": {
+          "enabled": false,
+          "username": "",
+          "password": "",
+          "realm": "Restricted"
+        },
+        "ipAllow": [],
+        "ipDeny": [],
+        "rate": {
+          "enabled": false,
+          "rps": 10,
+          "burst": 20,
+          "perIp": true
+        }
+      },
+      "note": "访问 /demo/任意路径 即可看到请求回显，用来快速确认反代链路是否工作",
+      "createdAt": "2026-09-05T23:30:37.884064584+08:00",
+      "updatedAt": "2026-09-07T15:21:08.790931359+08:00"
+    },
+    {
+      "id": "rt_demo_telegram",
+      "name": "示例：Telegram API（走 SOCKS5，默认停用）",
+      "enabled": false,
+      "host": "",
+      "path": "/tg",
+      "match": "prefix",
+      "mode": "",
+      "scheme": "",
+      "priority": 5,
+      "rewrite": "/",
+      "stripPath": false,
+      "backends": [
+        {
+          "url": "https://api.telegram.org",
+          "weight": 1,
+          "proxyId": "",
+          "backup": false
+        }
+      ],
+      "lb": "round_robin",
+      "proxyId": "px_c2ba0e9108e57e09",
+      "insecureTLS": false,
+      "preserveHost": false,
+      "retry": 2,
+      "timeout": 0,
+      "headers": {},
+      "health": {
+        "enabled": false,
+        "path": "/",
+        "interval": 60,
+        "timeout": 5,
+        "fails": 3,
+        "passes": 2,
+        "codes": []
+      },
+      "access": {
+        "basicAuth": {
+          "enabled": false,
+          "username": "",
+          "password": "",
+          "realm": "Restricted"
+        },
+        "ipAllow": [],
+        "ipDeny": [],
+        "rate": {
+          "enabled": false,
+          "rps": 10,
+          "burst": 20,
+          "perIp": true
+        }
+      },
+      "note": "启用后访问 /tg/bot\u003cTOKEN\u003e/getMe；这就是 nginx 做不到的「上游走 SOCKS5」场景",
+      "createdAt": "2026-09-05T23:30:37.884064835+08:00",
+      "updatedAt": "2026-09-07T15:21:08.79093145+08:00"
+    },
+    {
+      "id": "rt_c8fc246de90739d1",
+      "name": "万能反代（默认直连，不走代理）",
+      "enabled": false,
+      "host": "",
+      "path": "/",
+      "match": "prefix",
+      "mode": "domain_in_path",
+      "scheme": "http",
+      "domainRules": [
+        {
+          "match": "raw.githubusercontent.com",
+          "proxyId": "px_c2ba0e9108e57e09",
+          "scheme": "https"
+        },
+        {
+          "match": "39.135.169.25",
+          "proxyId": "px_364ac9710239959b",
+          "scheme": ""
+        }
+      ],
+      "priority": 1,
+      "rewrite": "",
+      "stripPath": false,
+      "backends": [],
+      "lb": "round_robin",
+      "proxyId": "__direct__",
+      "insecureTLS": false,
+      "preserveHost": false,
+      "retry": 0,
+      "timeout": 0,
+      "headers": {},
+      "health": {
+        "enabled": false,
+        "path": "/",
+        "interval": 10,
+        "timeout": 3,
+        "fails": 3,
+        "passes": 2,
+        "codes": []
+      },
+      "access": {
+        "basicAuth": {
+          "enabled": false,
+          "username": "",
+          "password": "",
+          "realm": ""
+        },
+        "ipAllow": [],
+        "ipDeny": [],
+        "rate": {
+          "enabled": false,
+          "rps": 10,
+          "burst": 20,
+          "perIp": false
+        }
+      },
+      "note": "",
+      "createdAt": "2026-09-06T04:27:06.216404311+08:00",
+      "updatedAt": "2026-09-07T15:21:08.79093164+08:00"
+    },
+    {
+      "id": "rt_e25316efda64d32c",
+      "name": "hnyd",
+      "enabled": true,
+      "host": "",
+      "path": "/hnyd",
+      "match": "prefix",
+      "mode": "",
+      "scheme": "",
+      "priority": 0,
+      "rewrite": "/",
+      "stripPath": false,
+      "backends": [
+        {
+          "url": "http://39.135.169.25/iptv.cdn.ha.chinamobile.com",
+          "weight": 1,
+          "proxyId": "px_364ac9710239959b",
+          "backup": false
+        }
+      ],
+      "lb": "round_robin",
+      "proxyId": "",
+      "insecureTLS": false,
+      "preserveHost": false,
+      "retry": 1,
+      "timeout": 0,
+      "headers": {},
+      "health": {
+        "enabled": false,
+        "path": "/",
+        "interval": 10,
+        "timeout": 3,
+        "fails": 3,
+        "passes": 2,
+        "codes": []
+      },
+      "access": {
+        "basicAuth": {
+          "enabled": false,
+          "username": "",
+          "password": "",
+          "realm": ""
+        },
+        "ipAllow": [],
+        "ipDeny": [],
+        "rate": {
+          "enabled": false,
+          "rps": 10,
+          "burst": 20,
+          "perIp": true
+        }
+      },
+      "note": "",
+      "createdAt": "2026-09-06T17:40:58.77647667+08:00",
+      "updatedAt": "2026-09-07T15:21:08.7909317+08:00"
+    },
+    {
+      "id": "rt_208f5d301dd9dedd",
+      "name": "sy",
+      "enabled": true,
+      "host": "",
+      "path": "/hh",
+      "match": "prefix",
+      "mode": "",
+      "scheme": "",
+      "domainRules": [
+        {
+          "match": "raw.githubusercontent.com",
+          "proxyId": "px_c2ba0e9108e57e09",
+          "scheme": "https"
+        }
+      ],
+      "priority": 0,
+      "rewrite": "",
+      "stripPath": false,
+      "backends": [
+        {
+          "url": "https://raw.githubusercontent.com/",
+          "weight": 1,
+          "proxyId": "px_c2ba0e9108e57e09",
+          "backup": false
+        }
+      ],
+      "lb": "round_robin",
+      "proxyId": "px_c2ba0e9108e57e09",
+      "insecureTLS": false,
+      "preserveHost": false,
+      "retry": 1,
+      "timeout": 0,
+      "headers": {},
+      "health": {
+        "enabled": false,
+        "path": "/",
+        "interval": 10,
+        "timeout": 3,
+        "fails": 3,
+        "passes": 2,
+        "codes": []
+      },
+      "access": {
+        "basicAuth": {
+          "enabled": false,
+          "username": "",
+          "password": "",
+          "realm": ""
+        },
+        "ipAllow": [],
+        "ipDeny": [],
+        "rate": {
+          "enabled": false,
+          "rps": 10,
+          "burst": 20,
+          "perIp": true
+        }
+      },
+      "note": "",
+      "createdAt": "2026-09-06T15:59:19.459791301+08:00",
+      "updatedAt": "2026-09-07T15:21:08.79093174+08:00"
+    }
+  ],
+  "tls": {
+    "enabled": false,
+    "certFile": "",
+    "keyFile": "",
+    "redirect": false,
+    "httpPort": 80
+  }
+}

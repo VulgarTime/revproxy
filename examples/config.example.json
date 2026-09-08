@@ -1,0 +1,188 @@
+{
+  "version": 1,
+  "listen": {
+    "addr": ":8080",
+    "adminAddr": "",
+    "adminPath": "/__admin",
+    "readTimeout": 0,
+    "writeTimeout": 0,
+    "idleTimeout": 120,
+    "maxHeaderKB": 64
+  },
+  "admin": {
+    "username": "admin",
+    "sessionTTL": 12,
+    "enabled": true
+  },
+  "log": {
+    "level": "info",
+    "access": true,
+    "file": "",
+    "buffer": 500
+  },
+  "global": {
+    "defaultProxy": "",
+    "maxConnsPerHost": 0,
+    "maxIdleConns": 200,
+    "dialTimeout": 10,
+    "responseTimeout": 0,
+    "keepAlive": 30,
+    "hideVersion": false,
+    "trustProxy": false,
+    "enableEcho": true
+  },
+  "proxies": [
+    {
+      "id": "px_local_socks5",
+      "name": "本地 socks5（无认证）",
+      "type": "socks5",
+      "addr": "127.0.0.1:1080",
+      "username": "",
+      "password": "",
+      "timeout": 10,
+      "note": "常见：Clash / v2ray / ss-local 的默认入站"
+    },
+    {
+      "id": "px_remote_socks5",
+      "name": "远端 socks5（带认证）",
+      "type": "socks5",
+      "addr": "1.2.3.4:1080",
+      "username": "user",
+      "password": "pass",
+      "timeout": 15,
+      "note": "改成你自己的地址"
+    },
+    {
+      "id": "px_http_connect",
+      "name": "HTTP CONNECT 代理",
+      "type": "http",
+      "addr": "127.0.0.1:3128",
+      "username": "",
+      "password": "",
+      "timeout": 10,
+      "note": "Squid / Charles 之类"
+    }
+  ],
+  "routes": [
+    {
+      "id": "rt_telegram",
+      "name": "Telegram Bot API（走远端 socks5）",
+      "enabled": true,
+      "host": "",
+      "path": "/tg",
+      "match": "prefix",
+      "priority": 10,
+      "rewrite": "/",
+      "stripPath": false,
+      "backends": [
+        { "url": "https://api.telegram.org", "weight": 1, "proxyId": "", "backup": false }
+      ],
+      "lb": "round_robin",
+      "proxyId": "px_remote_socks5",
+      "insecureTLS": false,
+      "preserveHost": false,
+      "retry": 2,
+      "timeout": 0,
+      "headers": {
+        "request": [],
+        "response": [],
+        "remove": []
+      },
+      "health": {
+        "enabled": true,
+        "path": "/",
+        "interval": 60,
+        "timeout": 5,
+        "fails": 3,
+        "passes": 2,
+        "codes": []
+      },
+      "access": {
+        "basicAuth": { "enabled": false, "username": "", "password": "", "realm": "Restricted" },
+        "ipAllow": [],
+        "ipDeny": [],
+        "rate": { "enabled": false, "rps": 10, "burst": 20, "perIp": true }
+      },
+      "note": "调用方式：http://127.0.0.1:8080/tg/bot<TOKEN>/getMe"
+    },
+    {
+      "id": "rt_local_service",
+      "name": "内网服务（主走代理，备用直连）",
+      "enabled": true,
+      "host": "",
+      "path": "/nas",
+      "match": "prefix",
+      "priority": 10,
+      "rewrite": "/",
+      "stripPath": false,
+      "backends": [
+        { "url": "http://192.168.1.10:5000", "weight": 3, "proxyId": "", "backup": false },
+        { "url": "http://192.168.1.11:5000", "weight": 1, "proxyId": "", "backup": false },
+        { "url": "http://127.0.0.1:5000", "weight": 1, "proxyId": "__direct__", "backup": true }
+      ],
+      "lb": "weighted",
+      "proxyId": "px_remote_socks5",
+      "insecureTLS": false,
+      "preserveHost": false,
+      "retry": 2,
+      "timeout": 0,
+      "headers": {
+        "request": [{ "name": "X-Forwarded-By", "value": "revproxy" }],
+        "response": [],
+        "remove": []
+      },
+      "health": {
+        "enabled": true,
+        "path": "/",
+        "interval": 15,
+        "timeout": 3,
+        "fails": 3,
+        "passes": 1,
+        "codes": []
+      },
+      "access": {
+        "basicAuth": { "enabled": true, "username": "nas", "password": "change-me", "realm": "NAS" },
+        "ipAllow": ["192.168.0.0/16", "127.0.0.1"],
+        "ipDeny": [],
+        "rate": { "enabled": true, "rps": 50, "burst": 100, "perIp": true }
+      },
+      "note": "演示：加权轮询 + Basic 认证 + 内网 IP 白名单 + 限流"
+    },
+    {
+      "id": "rt_plain",
+      "name": "普通本地服务（直连，不做任何处理）",
+      "enabled": true,
+      "host": "",
+      "path": "/local",
+      "match": "prefix",
+      "priority": 0,
+      "rewrite": "/",
+      "stripPath": false,
+      "backends": [
+        { "url": "http://127.0.0.1:9000", "weight": 1, "proxyId": "__direct__", "backup": false }
+      ],
+      "lb": "round_robin",
+      "proxyId": "__direct__",
+      "insecureTLS": false,
+      "preserveHost": false,
+      "retry": 1,
+      "timeout": 0,
+      "headers": { "request": [], "response": [], "remove": [] },
+      "health": { "enabled": false, "path": "/", "interval": 10, "timeout": 3, "fails": 3, "passes": 2, "codes": [] },
+      "access": {
+        "basicAuth": { "enabled": false, "username": "", "password": "", "realm": "Restricted" },
+        "ipAllow": [],
+        "ipDeny": [],
+        "rate": { "enabled": false, "rps": 10, "burst": 20, "perIp": true }
+      },
+      "note": ""
+    }
+  ],
+  "tls": {
+    "enabled": false,
+    "certFile": "",
+    "keyFile": "",
+    "redirect": false,
+    "httpPort": 80
+  }
+}

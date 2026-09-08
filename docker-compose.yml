@@ -1,0 +1,19 @@
+services:
+  revproxy:
+    build: .
+    image: revproxy:1.0.0
+    container_name: revproxy
+    restart: unless-stopped
+    ports:
+      - "8080:8080"     # 代理入口（管理后台默认共用此端口的 /__admin/）
+      # - "8081:8081"   # 若配置了管理后台独立端口，取消注释
+    environment:
+      REVPROXY_DATA: /data
+      TZ: Asia/Shanghai
+    volumes:
+      - ./data:/data            # 配置文件 config.json 持久化在这里
+    # 注意：若你的 SOCKS5 代理跑在宿主机上：
+    #   1) 容器内填写 host.docker.internal:1080（下面这行已经加好解析）
+    #   2) 或者直接用 network_mode: host
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
